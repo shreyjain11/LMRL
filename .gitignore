@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Data (too large for git)
+explainability/data/alphafold_cache/
+explainability/data/*.npy
+
+# Model weights
+explainability/weights/
+explainability/results/weights/
+
+# Logs (regenerable)
+explainability/results/*_log.txt
+
+# Heatmap images
+explainability/results/heatmaps/
+
+# Backup files
+*.bak
+
+# OS
+.DS_Store

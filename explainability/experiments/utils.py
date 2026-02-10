@@ -6,9 +6,9 @@ import os
 
 def setup_phyla_env():
     """configure paths and apply bimamba residual fix"""
-    sys.path.insert(0, '/home/shrey/work/Phyla')
-    sys.path.insert(0, '/home/shrey/work')
-    os.chdir('/home/shrey/work/Phyla/phyla')
+    sys.path.insert(0, '/home/shrey/phyla_final_workspace/Phyla')
+    sys.path.insert(0, '/home/shrey/phyla_final_workspace')
+    os.chdir('/home/shrey/phyla_final_workspace/Phyla/phyla')
     
     from phyla.model.model import BiMambaWrapper
     
@@ -31,18 +31,10 @@ def setup_phyla_env():
 def load_phyla_model(device='cuda'):
     """load phyla-beta model with correct state dict handling"""
     import torch
-    from phyla.model.model import Phyla, Config
+    from phyla.model.model import Phyla
     
-    config = Config()
-    model = Phyla(config, device=device, name='phyla-beta')
-    
-    # Load checkpoint manually with correct key stripping
-    checkpoint_path = 'weights/11564369'
-    state_dict = torch.load(checkpoint_path, map_location=device, weights_only=False)['state_dict']
-    # Strip 'model.' prefix (not 'model_name.')
-    new_state_dict = {k.replace('model.', ''): v for k, v in state_dict.items()}
-    model.load_state_dict(new_state_dict, strict=True)
-    model.to(device)
+    model = Phyla(name='phyla-beta', device=device)
+    model.load()
     model.eval()
     return model
 
@@ -93,3 +85,17 @@ RADICAL_SUBS = [
 STANDARD_AA = set("ACDEFGHIKLMNPQRSTVWY")
 
 DATA_DIR = "/home/shrey/work/Cleaned_OpenProtein_Set/Cleaned_Open_Protein_Set"
+
+
+import json
+import numpy as np
+
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (np.integer,)):
+            return int(obj)
+        if isinstance(obj, (np.floating,)):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super().default(obj)

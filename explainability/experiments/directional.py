@@ -1,9 +1,10 @@
+import numpy as np
 """
 directional mutation test
 verifies mutations toward a target sequence move embeddings toward target
 """
-from utils import setup_phyla_env, load_phyla_model, load_fasta, clean_sequences
-from utils import STANDARD_AA, DATA_DIR
+from utils import NumpyEncoder,  setup_phyla_env, load_phyla_model, load_fasta, clean_sequences
+from utils import NumpyEncoder,  STANDARD_AA, DATA_DIR
 setup_phyla_env()
 
 import torch
@@ -130,8 +131,25 @@ def main():
     results_dir = Path(__file__).parent.parent / 'results'
     results_dir.mkdir(exist_ok=True)
     out_path = results_dir / f'directional_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json'
+    import numpy as np
+    def sanitize(obj):
+        if isinstance(obj, dict):
+            return {k: sanitize(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [sanitize(v) for v in obj]
+        if isinstance(obj, (np.integer,)):
+            return int(obj)
+        if isinstance(obj, (np.floating,)):
+            return float(obj)
+        if isinstance(obj, (np.bool_,)):
+            return bool(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return obj
+    all_results = sanitize(all_results)
+
     with open(out_path, 'w') as f:
-        json.dump(all_results, f)
+        json.dump(all_results, f, cls=NumpyEncoder)
     print(f"saved: {out_path}")
 
 

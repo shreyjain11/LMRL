@@ -2,8 +2,8 @@
 conservation sensitivity test
 tests if mutations at conserved positions cause larger embedding shifts
 """
-from utils import setup_phyla_env, load_phyla_model, load_fasta, clean_sequences
-from utils import STANDARD_AA, DATA_DIR
+from utils import NumpyEncoder,  setup_phyla_env, load_phyla_model, load_fasta, clean_sequences
+from utils import NumpyEncoder,  STANDARD_AA, DATA_DIR
 setup_phyla_env()
 
 import torch
@@ -147,7 +147,7 @@ def main():
     results_dir.mkdir(exist_ok=True)
     out_path = results_dir / f'conservation_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json'
     with open(out_path, 'w') as f:
-        json.dump(all_results, f)
+        json.dump(all_results, f, cls=NumpyEncoder)
     print(f"saved: {out_path}")
 
 
