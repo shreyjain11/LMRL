@@ -87,18 +87,21 @@ class PhylaAttributor:
             relevance = grad.norm(dim=-1).cpu().numpy()
         
         # parse sequence boundaries
-        # layout: [CLS s0 CLS s1 CLS s2 ...] 
-        seq_len = len(seqs[0])
+        # layout: [CLS s0 CLS s1 CLS s2 ...] where each seq can differ in length
         n_seqs = len(seqs)
         
-        # extract just the target sequence's positions
-        start = target_seq_idx * (seq_len + 1) + 1  # skip CLS tokens
-        end = start + seq_len
+        # compute start position by summing actual lengths of preceding sequences
+        start = 0
+        for i in range(target_seq_idx):
+            start += len(seqs[i]) + 1  # +1 for CLS token
+        start += 1  # skip this sequence's CLS token
+        target_len = len(seqs[target_seq_idx])
+        end = start + target_len
         seq_relevance = relevance[start:end] if end <= len(relevance) else relevance[start:]
         
         info = {
             'total_len': len(relevance),
-            'seq_len': seq_len,
+            'seq_len': target_len,
             'target_seq_idx': target_seq_idx,
             'start_pos': start,
             'end_pos': end,
@@ -128,20 +131,24 @@ class PhylaAttributor:
         grad = grad[0]
         relevance = grad.norm(dim=-1).cpu().numpy()
         
-        seq_len = len(seqs[0])
+        # compute start positions using actual sequence lengths
+        def get_start(idx):
+            s = 0
+            for k in range(idx):
+                s += len(seqs[k]) + 1
+            return s + 1
         
-        # extract per-sequence relevance
-        start_i = seq_i * (seq_len + 1) + 1
-        start_j = seq_j * (seq_len + 1) + 1
+        start_i = get_start(seq_i)
+        start_j = get_start(seq_j)
         
-        rel_i = relevance[start_i:start_i + seq_len]
-        rel_j = relevance[start_j:start_j + seq_len]
+        rel_i = relevance[start_i:start_i + len(seqs[seq_i])]
+        rel_j = relevance[start_j:start_j + len(seqs[seq_j])]
         
         dist = torch.norm(embeddings[seq_i] - embeddings[seq_j]).item()
         
         info = {
             'distance': dist,
-            'seq_len': seq_len
+            'seq_len': len(seqs[0])
         }
         
         return rel_i, rel_j, info
